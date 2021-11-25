@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>Multi Step Form</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" >
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vuelidate@0.7.4/dist/validators.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vuelidate@0.7.4/dist/vuelidate.min.js"></script>
+</head>
+<body>
+
+<div id="app" class="container mt-5">
+	<div class="row">
+		<div class="col-md-8">
+		<h1>Step:{{ stepNumber }}</h1>
+			<keep-alive>
+			<form-name v-if="stepNumber === 1" @update="updateForm"></form-name>
+			<form-contact v-if="stepNumber === 2" @update="updateForm"></form-contact>
+			<form-mail v-if="stepNumber === 3" @update="updateForm"></form-mail>
+			<form-confirm v-if="stepNumber === 4" v-bind:form="form"></form-confirm>
+		</keep-alive>
+			<button class="btn btn-primary" @click="backStep" v-show="stepNumber != 1">Back</button>
+			<button class="btn btn-primary" @click="nextStep" v-show="stepNumber != 4">Next</button>
+			<button class="btn btn-primary" @click="submit(form)" v-show="stepNumber == 4">Submit</button>
+		</div>
+		<pre><code>{{ form }}</code></pre>
+
+
+
+	</div>
+</div>
+<script>
+Vue.component('form-name',{
+	template: `<form @input="submit">
+				<h2>Name Info</h2>
+				<div class="form-group">
+				<label for="username"></label>
+				<input name="entry.384055293" type="usertype" class="form-control" v-model="username" required="true" placeholder="username">
+				</div>
+				</form>`,
+	data: function(){
+		return {
+				username: null,
+		}
+	},
+	methods: {
+		submit: function(){
+			this.$emit('update',{
+				username: this.username,
+			});
+		}
+	}
+});
+
+Vue.component('form-contact',{
+	template: `<form @input="submit">
+				<h2>Usertype</h2>
+				<div class="form-check">
+					<input type="radio" class="form-check-input" id="user" value="user" v-model="usertype">
+					<label class="form-check-label" for="user">user</label>
+				</div>
+				<div class="form-check">
+					
+					<input type="radio" class="form-check-input" id="creator" value="creator" v-model="usertype">
+					<label class="form-check-label" for="creator">creator</label>
+				</div>
+				</form>`,
+	data: function(){
+		return {
+			usertype: null,
+		}
+	},
+	methods: {
+		submit: function(){
+			this.$emit('update',{
+				usertype: this.usertype,
+			});
+		}
+	}
+});
+
+Vue.component('form-mail',{
+	template: `<form @input="submit">
+				<h2>User Info</h2>
+				<div class="form-group">
+				<label for="mail">mail</label>
+				<input type="email" class="form-control" v-model="mail" placeholder="Enter mail" required="true">
+				</div>
+				</form>`,
+	data: function(){
+		return {
+			mail: null
+		}
+	},
+	methods: {
+		submit: function(){
+			this.$emit('update',{
+				mail: this.mail		
+			});
+		}
+	}
+});
+
+Vue.component('form-confirm',{
+	template: `<div>
+			<h2>Confirmation</h2>
+				<p>mail: <b>{{ form.mail }}</b> </p>
+			</div>`,
+	props:{
+		form: Object
+	},
+});
+
+Vue.use(window.vuelidate.default);
+const { required, username, usertype, mail } = window.validators;
+
+const app = new Vue({
+	el: '#app',
+	data: {
+		stepNumber: 1,
+		form: {
+			username: null,
+			usertype: null,
+			mail: null,
+		},
+		validations: {
+			username: {
+				required
+			},
+			usertype: {
+				required
+			},
+			mail: {
+				required
+			}
+		},
+		formInfo: {
+			action: "https://docs.google.com/forms/u/0/d/e/1FAIpQLSe0acDPRn6DmjXByOfuNHj51zibw6LItgrew_T7Qa_PHKojbw/formResponse",
+			username: "entry.384055293",
+			usertype: "entry.1138892077",
+			mail: "entry.171734378",
+		}
+	},
+	methods:{
+		updateForm:function(formData){
+			Object.assign(this.form, formData);
+		},
+		backStep:function(){
+			this.stepNumber--;
+		},			
+		nextStep:function(){
+
+			this.stepNumber++;
+		},
+		submit(form){
+			const submitParams = new FormData();
+			Object.keys(this.form).forEach((key) => {
+				submitParams.append(this.formInfo[key], this.form[key])
+			})
+			// CORSエラー対策
+			// const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+			// Googleフォームのaction属性値
+			const GOOGLE_FORM_ACTION = this.formInfo.action
+			// Ajax POST通信
+			axios.post(GOOGLE_FORM_ACTION, submitParams).then(res => {
+				console.log('success');
+			});
+		}
+	}
+});
+</script>
+</body>
+</html>
+
+
+<!-- <form action="https://docs.google.com/forms/u/0/d/e/1FAIpQLSe0acDPRn6DmjXByOfuNHj51zibw6LItgrew_T7Qa_PHKojbw/formResponse" target="hidden_iframe" method="POST" id="mG61Hd" onsubmit="submitted=true;">
+	%.@.[126152402,"first name",null,0,[[384055293,[],false,[],[],null,null,null,null,null,[null,[]]]],null,null,null,[]],"i1","i2","i3",false]
+	%.@.[633130899,"last name",null,0,[[1138892077,[],false,[],[],null,null,null,null,null,[null,[]]]],null,null,null,[]],"i5","i6","i7",false]
+	<input name="entry.384055293" type="text" required="required" id="textfield" class="g_form" placeholder="first">
+	<input name="entry.1138892077" type="text" required="required" id="textfield" class="g_form" placeholder="last">
+	<input type="submit" class="btbt">
+	<script type="text/javascript">
+		var submitted = false;
+	  </script>
+
+	  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
+		onload="if(submitted){window.location='index.html';}"></iframe>
+		<script type="text/javascript">
+			var submitted = false;
+		  </script>
+  
+		  <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"
+			onload="if(submitted){window.location='index.html';}"></iframe>
+</form> -->
